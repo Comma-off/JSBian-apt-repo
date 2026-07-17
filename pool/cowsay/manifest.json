@@ -4,5 +4,5 @@
   "Architecture": "all",
   "Maintainer": "Comma",
   "Depends": "",
-  "Description": "configurable talking cow (JSBian-native, actually runs)"
+  "Description": "cowsay reimplementation for JSBian."
 }
