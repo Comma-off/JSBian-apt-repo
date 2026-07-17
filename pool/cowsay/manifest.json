@@ -1,0 +1,7 @@
+{
+  "Package": "cowsay",
+  "Version": "1.0.0-jsbian1",
+  "Architecture": "all",
+  "Depends": "",
+  "Description": "configurable talking cow (JSBian-native, actually runs)"
+}
