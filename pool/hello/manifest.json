@@ -4,5 +4,5 @@
   "Architecture": "all",
   "Maintainer": "Comma",
   "Depends": "",
-  "Description": "A port of GNU's 'hello' package to JSBian."
+  "Description": "GNU hello package reimplementation for JSBian."
 }
