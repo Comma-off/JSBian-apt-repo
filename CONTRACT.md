@@ -83,9 +83,28 @@ Packages run inside a locked-down `vm` context — no `require`, `process`,
 | `ctx.readFile(path)` | fn → string | read a VFS file (permission-checked like `cat`); throws if missing/denied |
 | `ctx.writeFile(path, content)` | fn | write a VFS file (permission-checked like a shell redirect: needs write access to an existing file, or create access to its parent dir); throws if denied |
 | `ctx.exists(path)` | fn → boolean | check a VFS path |
-| `ctx.readLine(prompt)` | fn → Promise\<string\> | interactive line input — writes `prompt`, then waits for a line of real terminal input (raw-mode-aware; degrades to a plain read on non-TTY streams). No fixed timeout — a human reading and typing takes real time. See `pool/nano` for a worked example (a small line editor). |
+| `ctx.readLine(prompt)` | fn → Promise\<string\> | interactive **line** input — writes `prompt`, then waits for a line of real terminal input (raw-mode-aware; degrades to a plain read on non-TTY streams). No fixed timeout — a human reading and typing takes real time. |
+| `ctx.term` | object | raw terminal control for full-screen TUIs — see below. `ctx.term.isTTY` is `false` over non-TTY streams (piped/batch/tests); a package should check it and fall back to `ctx.readLine`-based interaction if so. See `pool/nano` for a worked example of both. |
 | `ctx.host` | object | `{hostname, cpus, totalMemBytes, freeMemBytes, uptimeSeconds, nodeVersion, packagesInstalledCount}` — real host data, read-only |
 | `ctx.sleep(ms)` | fn → Promise | cooperative delay, capped at 3000ms |
+
+### `ctx.term` — full-screen TUI primitives
+
+| Member | Type | Notes |
+|---|---|---|
+| `ctx.term.isTTY` | boolean | whether there's a real terminal to draw into |
+| `ctx.term.cols` / `ctx.term.rows` | number | current terminal size (defaults to 80×24 if unknown) |
+| `ctx.term.write(s)` | fn | raw write — send ANSI escape sequences directly (cursor movement, colors, alternate screen, ...); build them yourself, there's no helper library |
+| `ctx.term.openKeyReader()` | fn → `{next, close}` | `next()` returns a `Promise` resolving to the next keystroke: `{sequence, name, ctrl, meta, shift}` (`name` is set for special keys — `up`/`down`/`left`/`right`/`home`/`end`/`pageup`/`pagedown`/`backspace`/`delete`/`return`/`tab`; plain characters show up in `sequence` with `name` unset). **Always `close()` it**, in a `finally`, even on error — see below. |
+
+A TUI package is responsible for its own terminal hygiene: enter/exit the
+alternate screen buffer (`\x1b[?1049h` / `\x1b[?1049l`) so the user's real
+scrollback is untouched, and always `close()` your key reader. That said,
+you don't have to get this perfect — Shell wraps every JSBian-native
+package invocation in a safety net that unconditionally restores raw mode
+and writes `\x1b[?25h\x1b[?1049l\x1b[0m` (show cursor, exit alt-screen,
+reset attributes) when it returns, crashes, or times out. A buggy or
+crashing TUI can't leave the user's real terminal stuck in a broken state.
 
 No way to spawn processes, no way to reach the network. VFS access
 (`readFile`/`writeFile`) is real but permission-checked exactly like the
