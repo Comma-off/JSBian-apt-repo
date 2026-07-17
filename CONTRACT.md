@@ -11,14 +11,16 @@ pool/<name>/manifest.json   Debian-control-style metadata for this package
 pool/<name>/<name>.js       the entry point
 ```
 
-`build.js` scans `pool/`, and writes a Debian-compatible index to
-`dists/jsbian/main/binary-amd64/Packages` (+ `.gz`) — the exact RFC822
-stanza format (`Package:`, `Version:`, `Depends:`, `Description:`, ...)
-JSBian's `apt.js` already parses for real Debian mirrors, plus a `Filename:`
-pointing back at `pool/<name>/<name>.js`. JSBian's apt engine tells a
-JSBian-native package apart from a real `.deb` purely by that `Filename`
-extension — everything else about fetching/caching/dependency-resolving it
-is identical to a real package.
+That's it — **no build step**. `apt update` on the JSBian side discovers
+packages by listing this repo's `pool/` directory through the GitHub
+Contents API and reading each `pool/<name>/manifest.json` directly, so a
+package is installable the moment it's pushed to `main`. (There's no
+committed `dists/.../Packages` index to forget to regenerate — that was
+JSBian's first design here, and it silently went stale the first time
+someone added a package without re-running a build script. Don't reintroduce
+one.)
+
+`manifest.Package` must exactly match its `pool/<name>/` directory name.
 
 ## manifest.json
 
