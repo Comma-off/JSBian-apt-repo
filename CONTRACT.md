@@ -4,37 +4,52 @@ A JSBian-native package is a plain `.js` file JSBian's shell can actually
 execute (via a sandboxed `vm` context) — unlike real Debian `.deb`s, whose
 ELF binaries JSBian can only report on, never run.
 
-## Layout
+## Repo structure
 
 ```
-pool/<name>/manifest.json   Debian-control-style metadata for this package
-pool/<name>/<name>.js       the entry point
+packages.json                the whole index: one JSON array, one file
+pool/<name>/<name>.js        each package's entry point
 ```
 
-That's it — **no build step**. `apt update` on the JSBian side discovers
-packages by listing this repo's `pool/` directory through the GitHub
-Contents API and reading each `pool/<name>/manifest.json` directly, so a
-package is installable the moment it's pushed to `main`. (There's no
-committed `dists/.../Packages` index to forget to regenerate — that was
-JSBian's first design here, and it silently went stale the first time
-someone added a package without re-running a build script. Don't reintroduce
-one.)
+That's the entire structure. There's no build step and no per-package
+manifest — `apt update` on the JSBian side fetches `packages.json` with a
+single plain HTTP request (not the GitHub API, so there's no rate limit to
+worry about), which is also what makes it cheap enough for JSBian to
+auto-refresh on every start.
 
-`manifest.Package` must exactly match its `pool/<name>/` directory name.
+## packages.json
 
-## manifest.json
+A JSON array, one object per package:
 
 ```json
-{
-  "Package": "fastfetch",
-  "Version": "1.0.0-jsbian1",
-  "Architecture": "all",
-  "Depends": "",
-  "Description": "neofetch-like tool for fetching system information (JSBian-native, actually runs)"
-}
+[
+  {
+    "Package": "cowsay",
+    "Version": "1.0.0-jsbian1",
+    "Architecture": "all",
+    "Maintainer": "Comma",
+    "Depends": "",
+    "Description": "configurable talking cow (JSBian-native, actually runs)"
+  }
+]
 ```
 
+| Field | Required | Notes |
+|---|---|---|
+| `Package` | yes | must match the `pool/<name>/` directory name |
+| `Version` | yes | freeform, Debian-style versions are conventional (`1.0.0-jsbian1`) |
+| `Architecture` | no | conventionally `all` — packages are plain JS, not compiled |
+| `Maintainer` | no | who to credit/blame; shown in `apt show` |
+| `Depends` | no | comma-separated package names; alternatives (`a \| b`) and version constraints (`(>= 1.0)`) are accepted but only the first alternative is ever resolved |
+| `Description` | yes | one line is enough; shown in `apt search`/`apt show`/`dpkg -l` |
+
+`Filename` is **not** part of the schema — it's always derived as
+`pool/<Package>/<Package>.js`, so there's one less thing that can drift out
+of sync with reality.
+
 ## Entry point
+
+`pool/<name>/<name>.js`:
 
 ```js
 module.exports = async function run(ctx) {
@@ -66,3 +81,25 @@ or hanging (execution is time-boxed by the host regardless).
 This is sandboxing appropriate for a simulated learning project, not a
 hardened security boundary — don't run untrusted third-party packages
 through this and assume it's bulletproof.
+
+## Setting up your own repo
+
+This structure isn't special to `Comma-off/JSBian-apt-repo` — anyone can
+host one. Fork this repo, or start a fresh one with just `packages.json`
+and a `pool/` directory in the layout above, push it to GitHub, and point a
+JSBian install at it by adding a line to `/etc/apt/sources.list`:
+
+```
+deb-github <owner>/<repo> <branch>
+```
+
+For example, this repo's own line (JSBian's default) is:
+
+```
+deb-github Comma-off/JSBian-apt-repo main
+```
+
+Multiple `deb-github` (and real `deb`) lines can coexist — `apt update`
+fetches all configured sources and merges them. Where a package name
+exists in more than one source, whichever was fetched last wins, so list
+order in `sources.list` matters if you want one source to take priority.
