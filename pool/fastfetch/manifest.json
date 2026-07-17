@@ -1,0 +1,8 @@
+{
+  "Package": "fastfetch",
+  "Version": "1.0.0-jsbian1",
+  "Architecture": "all",
+  "Maintainer": "Comma",
+  "Depends": "",
+  "Description": "neofetch-like tool for fetching system information (JSBian-native, actually runs)"
+}

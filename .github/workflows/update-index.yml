@@ -1,0 +1,36 @@
+name: Update package index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pool/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Validate packages and regenerate packages.json
+        run: node scripts/generate-index.js
+
+      - name: Commit and push packages.json if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- packages.json; then
+            echo "packages.json unchanged"
+          else
+            git add packages.json
+            git commit -m "Auto-update packages.json [skip ci]"
+            git push
+          fi
