@@ -4,5 +4,5 @@
   "Architecture": "all",
   "Maintainer": "Comma",
   "Depends": "",
-  "Description": "neofetch-like tool for fetching system information (JSBian-native, actually runs)"
+  "Description": "fastfetch reimplementation for JSBian."
 }
