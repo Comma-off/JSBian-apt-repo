@@ -1,0 +1,7 @@
+{
+  "Package": "hello",
+  "Version": "1.0.0-jsbian1",
+  "Architecture": "all",
+  "Depends": "",
+  "Description": "A port of GNU's 'hello' package to JSBian."
+}
