@@ -81,13 +81,19 @@ Packages run inside a locked-down `vm` context — no `require`, `process`,
 | `ctx.cwd` | string | current working directory |
 | `ctx.user` | `{name, uid, gid, home}` | current user snapshot |
 | `ctx.readFile(path)` | fn → string | read a VFS file (permission-checked like `cat`); throws if missing/denied |
+| `ctx.writeFile(path, content)` | fn | write a VFS file (permission-checked like a shell redirect: needs write access to an existing file, or create access to its parent dir); throws if denied |
 | `ctx.exists(path)` | fn → boolean | check a VFS path |
+| `ctx.readLine(prompt)` | fn → Promise\<string\> | interactive line input — writes `prompt`, then waits for a line of real terminal input (raw-mode-aware; degrades to a plain read on non-TTY streams). No fixed timeout — a human reading and typing takes real time. See `pool/nano` for a worked example (a small line editor). |
 | `ctx.host` | object | `{hostname, cpus, totalMemBytes, freeMemBytes, uptimeSeconds, nodeVersion, packagesInstalledCount}` — real host data, read-only |
 | `ctx.sleep(ms)` | fn → Promise | cooperative delay, capped at 3000ms |
 
-No VFS **write** access, no way to spawn processes, no way to reach the
-network. A package that wants to misbehave is limited to printing garbage
-or hanging (execution is time-boxed by the host regardless).
+No way to spawn processes, no way to reach the network. VFS access
+(`readFile`/`writeFile`) is real but permission-checked exactly like the
+shell itself — a package can't write somewhere its invoking user couldn't.
+A package that wants to misbehave without ever calling `ctx.readLine` is
+limited to printing garbage or hanging — hanging is time-boxed by the host
+(10 minutes) so a hung package can't wedge the shell forever, but that
+ceiling deliberately doesn't apply to time spent waiting on real user input.
 
 This is sandboxing appropriate for a simulated learning project, not a
 hardened security boundary — don't run untrusted third-party packages

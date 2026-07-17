@@ -1,0 +1,8 @@
+{
+  "Package": "nano",
+  "Version": "1.0.0-jsbian1",
+  "Architecture": "all",
+  "Maintainer": "Comma",
+  "Depends": "",
+  "Description": "simple line-oriented text editor for JSBian (nano-lite: not a full-screen clone, see JSBian-apt-repo README)"
+}
