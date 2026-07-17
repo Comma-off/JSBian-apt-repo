@@ -9,3 +9,9 @@ Version: 1.0.0-jsbian1
 Architecture: all
 Description: neofetch-like tool for fetching system information (JSBian-native, actually runs)
 Filename: pool/fastfetch/fastfetch.js
+
+Package: hello
+Version: 1.0.0-jsbian1
+Architecture: all
+Description: A port of GNU's 'hello' package to JSBian.
+Filename: pool/hello/hello.js
