@@ -4,5 +4,5 @@
   "Architecture": "all",
   "Maintainer": "Comma",
   "Depends": "",
-  "Description": "full-screen nano-style text editor for JSBian (real keybindings: ^O save, ^X exit, ^K/^U cut/paste, ^W search, ^G help)"
+  "Description": '"GNU nano' port to JSBian."
 }
